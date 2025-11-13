@@ -5,9 +5,10 @@ import matplotlib.pyplot as plt
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import confusion_matrix, classification_report
-from imblearn.over_sampling import SMOTE
+from imblearn.over_sampling import SMOTE, ADASYN
 from imblearn.pipeline import Pipeline
 from xgboost import XGBClassifier  
+
 
 db1 = pd.read_csv('data/db1.csv')
 db2 = pd.read_csv('data/db2.csv')
@@ -19,12 +20,12 @@ X_test = db2.drop("Diabetes_binary", axis=1)
 y_test = db2["Diabetes_binary"]
 
 pipeline = Pipeline([
-    ('smote', SMOTE(sampling_strategy='auto', random_state=42, k_neighbors=2)),
+    ('adasyn', ADASYN(random_state=42)),
     ('scaler', StandardScaler()),
     ('model', XGBClassifier(
         random_state=42,
         n_estimators=400,
-        learning_rate=0.05,
+        learning_rate=0.01,
         objective='multi:softmax',
         num_class = 3))
 ])
@@ -39,3 +40,9 @@ print("Saved predicted result to data/db2_types_xgb.csv")
 
 db2_types = pd.read_csv('data/db2_types_xgb.csv')
 print(db2_types['Predicted_Type'].value_counts())
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred, zero_division=0))
+
+cm = confusion_matrix(y_test, y_pred)
+print("\nConfusion Matrix:\n", cm)
